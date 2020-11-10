@@ -21,9 +21,11 @@ const registerDevice = ({ email, token, platform, applicationName}) => {
     }
   }
   return axios.post(`${process.env.ITERABLE_URL}${REGISTER_USER}`, body, {
-    'Authorization': process.env.ITERABLE_API_KEY,
-    'Auth_Key': process.env.ITERABLE_API_KEY,
-    'Content-Type': 'application/json'
+    headers: {
+      'Authorization': process.env.ITERABLE_API_KEY,
+      'Api-Key': process.env.ITERABLE_API_KEY,
+      'Content-Type': 'application/json'
+    }
   })
   .then(() => result)
   .catch(e => {
@@ -49,7 +51,7 @@ const backFillUserDevices = async (limit = 20, offset = 0) => {
     ommited: [],
     failed: []
   }
-  while (successIndex >= 0 && successIndex < limit) {
+  while (successIndex >= 0 && successIndex < (limit + offset)) {
     const {email, token, iterableUserId, applicationName, platform} = data[loopIndex];
     if (email && iterableUserId && email !== '#N/A' && iterableUserId !== '#N/A') {
       const deviceStatus = await registerDevice({
