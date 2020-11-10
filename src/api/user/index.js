@@ -32,10 +32,16 @@ const registerDevice = ({ email, token, platform, applicationName}) => {
   })
 }
 
+const registerDeviceMock = ({email, ...rest}) => {
+  return new Promise((resolve) => {
+    resolve({ email, ok: Math.random() * 10 <= 2})
+  })
+}
+
 const backFillUserDevices = async (limit = 20, offset = 0) => {
   const startPoint = moment()
-  console.log(`------------- START DEVICES BACKFILL AT [${startPoint.format('YYYY-MM-DDTHH:mm:ss')}]`)
-  const data = await csv.readFileContents('/assets/IterableBackFill.csv')
+  console.log(`------------- START DEVICES BACKFILL AT [${startPoint.format('YYYY-MM-DDTHH:mm:ss')}] -------------`)
+  const data = await csv.readFileContents('assets/IterableBackFill.csv')
   let loopIndex = successIndex = 0 + offset
   let waitIndex = 0
   const result = {
@@ -44,7 +50,7 @@ const backFillUserDevices = async (limit = 20, offset = 0) => {
     failed: []
   }
   while (successIndex >= 0 && successIndex < limit) {
-    const {email, token, iterableUserId, applicationName, platform} = data[successIndex];
+    const {email, token, iterableUserId, applicationName, platform} = data[loopIndex];
     if (email && iterableUserId && email !== '#N/A' && iterableUserId !== '#N/A') {
       const deviceStatus = await registerDevice({
         email,
@@ -53,6 +59,7 @@ const backFillUserDevices = async (limit = 20, offset = 0) => {
         applicationName
       });
       if (deviceStatus.ok) {
+        console.log('[iterable.backFillUserDevices] User registered: ', email)
         result.success.push(email)
         successIndex++
       } else {
@@ -63,6 +70,8 @@ const backFillUserDevices = async (limit = 20, offset = 0) => {
     }
     // Wait 2 secods every 350 devices
     if (waitIndex === 400) {
+      console.log('[iterable.backFillUserDevices] Paused at: ', loopIndex)
+      console.log('[iterable.backFillUserDevices] Devices registered ATM: ', result.success.length)
       waitIndex = 0
       await delay(2000)
     }
@@ -70,7 +79,7 @@ const backFillUserDevices = async (limit = 20, offset = 0) => {
     loopIndex++
   }
   const stopPoint = moment()
-  console.log(`------------- END DEVICES BACKFILL AT [${stopPoint.format('YYYY-MM-DDTHH:mm:ss')}]`)
+  console.log(`------------- END DEVICES BACKFILL AT [${stopPoint.format('YYYY-MM-DDTHH:mm:ss')}] ------------- `)
   console.log('[iterable.backFillUserDevices] Devices registered: ', result.success.length)
   console.log('[iterable.backFillUserDevices] Devices ommited: ', result.ommited.length)
   console.log('[iterable.backFillUserDevices] Devices registered failed: ', result.failed.length)
