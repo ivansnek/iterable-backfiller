@@ -75,7 +75,10 @@ const getUser = email => axios.get(`${process.env.ITERABLE_URL}${GET_USER}/${ema
     }
   })
   .then(validateUserData)
-  .catch(e => console.log(`[iterable.getUser] Error`, e?.message ?? e))
+  .catch(e => {
+    console.log(`[iterable.getUser] Error`, e?.message ?? e)
+    return {email}
+  })
 
 const registerDeviceMock = ({email, ...rest}) => {
   return new Promise((resolve) => {
@@ -138,6 +141,8 @@ const validateUsers = async (limit = 20, offset = 0) => {
   const data = await csv.readFileContents('assets/mobile_users.csv')
   let loopIndex = successIndex = 0 + offset
   const badEmails = []
+  let waitIndex = 0
+
   while (successIndex >= 0 && successIndex < (limit + offset)) {
     const {email} = data[loopIndex];
     if (email && email !== '#N/A') {
@@ -152,6 +157,13 @@ const validateUsers = async (limit = 20, offset = 0) => {
       console.log(`[iterable.validateUsers] ${loopIndex} - Invalid EMAIL: `, email)
     }
     await delay(1001)
+    if (waitIndex === 500) {
+      console.log('[iterable.validateUsers] Paused at: ', loopIndex)
+      console.log('[iterable.validateUsers] Users invalid ATM: ', badEmails.length)
+      waitIndex = 0
+      await delay(5000)
+    }
+    waitIndex++
     successIndex++
     loopIndex++
   }
