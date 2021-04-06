@@ -19,6 +19,12 @@ app.post('/backfill-user-devices', (req, res) => {
   res.status(200).json({ ok: true })
 })
 
+app.post('/validate-users', (req, res) => {
+  const {limit, offset} = req.body || {}
+  iterableUser.validateUsers(limit, offset)
+  res.status(200).json({ ok: true })
+})
+
 app.listen(port, () => {
   console.log(`Iterable BackFiller listening at http://localhost:${port}`)
 })
